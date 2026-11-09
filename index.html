@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B1020">
+<link rel="manifest" href="manifest.json">
+<title>ArivuNova</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #0B1020; color: #E5E7EB;
+    padding: 16px 16px 90px; max-width: 520px; margin: 0 auto;
+  }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .logo { font-size: 26px; font-weight: 800; color: #A78BFA; }
+  .tag { font-size: 13px; color: #94A3B8; }
+  .streak { background: #151B33; padding: 8px 12px; border-radius: 20px; font-size: 14px; }
+
+  .card { background: #151B33; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+  .card h3 { font-size: 16px; margin-bottom: 10px; }
+
+  .ask input {
+    width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #22D3EE;
+    background: #0B1020; color: #fff; font-size: 16px;
+  }
+  .ask button {
+    width: 100%; margin-top: 10px; padding: 13px; border: none; border-radius: 12px;
+    background: #22D3EE; color: #0B1020; font-size: 16px; font-weight: 700;
+  }
+  #result { margin-top: 12px; line-height: 1.6; white-space: pre-wrap; font-size: 15px; }
+
+  .progress { height: 10px; background: #0B1020; border-radius: 6px; overflow: hidden; margin: 8px 0; }
+  .progress div { height: 100%; width: 0; background: linear-gradient(90deg, #22D3EE, #A78BFA); transition: width .4s; }
+  .goalrow { display: flex; justify-content: space-between; font-size: 14px; color: #94A3B8; }
+  .goalbtn {
+    margin-top: 10px; padding: 9px 14px; border: 1px solid #22D3EE; background: transparent;
+    color: #22D3EE; border-radius: 10px; font-size: 14px;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .tile {
+    background: #151B33; border-radius: 16px; padding: 16px 12px; text-align: center;
+    border: 1px solid #1F2747; cursor: pointer;
+  }
+  .tile .ic { font-size: 28px; }
+  .tile .nm { margin-top: 6px; font-size: 14px; font-weight: 600; }
+  .tile .sub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+  .tile:active { transform: scale(.97); }
+
+  .sec { margin: 22px 0 10px; font-size: 17px; font-weight: 700; }
+
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0; background: #151B33;
+    display: flex; justify-content: space-around; padding: 10px 0 12px;
+    border-top: 1px solid #1F2747; max-width: 520px; margin: 0 auto;
+  }
+  nav a { text-align: center; font-size: 11px; color: #94A3B8; text-decoration: none; }
+  nav a.on { color: #22D3EE; }
+  nav a span { display: block; font-size: 22px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="logo">ArivuNova</div>
+    <div class="tag">உன் IAS படிப்பு உதவியாளர்</div>
+  </div>
+  <div class="streak">🔥 <span id="streak">0</span> நாள்</div>
+</div>
+
+<div class="card ask">
+  <h3>🤖 AI-யிடம் கேள்</h3>
+  <input type="text" id="question" placeholder="உன் சந்தேகத்தை எழுது...">
+  <button onclick="askAI()">Ask AI</button>
+  <p id="result"></p>
+</div>
+
+<div class="card">
+  <h3>🎯 இன்றைய இலக்கு</h3>
+  <div class="goalrow"><span id="goalText">0 / 5 தலைப்புகள்</span><span id="goalPct">0%</span></div>
+  <div class="progress"><div id="bar"></div></div>
+  <button class="goalbtn" onclick="doneTopic()">+ ஒரு தலைப்பு முடிந்தது</button>
+</div>
+
+<div class="sec">📚 பாடங்கள்</div>
+<div class="grid">
+  <div class="tile" onclick="openSubject('Polity')"><div class="ic">🏛️</div><div class="nm">அரசியலமைப்பு</div><div class="sub">Polity</div></div>
+  <div class="tile" onclick="openSubject('History')"><div class="ic">📜</div><div class="nm">வரலாறு</div><div class="sub">History</div></div>
+  <div class="tile" onclick="openSubject('Geography')"><div class="ic">🌍</div><div class="nm">புவியியல்</div><div class="sub">Geography</div></div>
+  <div class="tile" onclick="openSubject('Economy')"><div class="ic">💰</div><div class="nm">பொருளாதாரம்</div><div class="sub">Economy</div></div>
+  <div class="tile" onclick="openSubject('Environment')"><div class="ic">🌿</div><div class="nm">சுற்றுச்சூழல்</div><div class="sub">Environment</div></div>
+  <div class="tile" onclick="openSubject('Science')"><div class="ic">🔬</div><div class="nm">அறிவியல்</div><div class="sub">Science & Tech</div></div>
+</div>
+
+<div class="sec">⚡ விரைவு கருவிகள்</div>
+<div class="grid">
+  <div class="tile" onclick="quick('Prelims MCQ')"><div class="ic">📝</div><div class="nm">Prelims MCQ</div></div>
+  <div class="tile" onclick="quick('Mains Answer')"><div class="ic">✍️</div><div class="nm">Mains Answer</div></div>
+  <div class="tile" onclick="quick('Current Affairs')"><div class="ic">📰</div><div class="nm">Current Affairs</div></div>
+  <div class="tile" onclick="quick('Notes Summary')"><div class="ic">🗒️</div><div class="nm">Notes சுருக்கம்</div></div>
+</div>
+
+<nav>
+  <a class="on" href="#"><span>🏠</span>Home</a>
+  <a href="#" onclick="quick('Prelims MCQ')"><span>📝</span>Practice</a>
+  <a href="#" onclick="quick('Current Affairs')"><span>📰</span>News</a>
+  <a href="#" onclick="alert('Profile விரைவில்')"><span>👤</span>Profile</a>
+</nav>
+
+<script>
+  // ---------- Streak & daily goal (phone-ல் சேமிக்கப்படும்) ----------
+  const GOAL = 5;
+  const today = new Date().toDateString();
+  function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  let state = load("arivu", { day: today, done: 0, streak: 0, last: "" });
+  if (state.day !== today) { state.day = today; state.done = 0; }
+
+  function render() {
+    document.getElementById("streak").textContent = state.streak;
+    const pct = Math.min(100, Math.round(state.done / GOAL * 100));
+    document.getElementById("goalText").textContent = state.done + " / " + GOAL + " தலைப்புகள்";
+    document.getElementById("goalPct").textContent = pct + "%";
+    document.getElementById("bar").style.width = pct + "%";
+  }
+  function doneTopic() {
+    if (state.done < GOAL) state.done++;
+    if (state.done >= GOAL && state.last !== today) { state.streak++; state.last = today; }
+    save("arivu", state); render();
+  }
+  render();
+
+  // ---------- AI ----------
+  async function askAI(text) {
+    const box = document.getElementById("question");
+    const q = (typeof text === "string" ? text : box.value).trim();
+    const out = document.getElementById("result");
+    if (!q) { out.textContent = "முதலில் ஒரு கேள்வி எழுது."; return; }
+    box.value = q;
+    out.textContent = "யோசிக்கிறேன்...";
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q })
+      });
+      const data = await res.json();
+      out.textContent = data.answer;
+    } catch (e) {
+      out.textContent = "Backend இன்னும் இணைக்கப்படவில்லை, அல்லது இணையம் இல்லை.";
+    }
+    out.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  document.getElementById("question").addEventListener("keydown", e => { if (e.key === "Enter") askAI(); });
+
+  function openSubject(s) { askAI("UPSC " + s + " பாடத்தின் முக்கிய தலைப்புகளை முன்னுரிமை வரிசையில் பட்டியலிடு."); }
+  function quick(t) {
+    const prompts = {
+      "Prelims MCQ": "UPSC Prelims பாணியில் 5 MCQ கேள்விகள் விடையுடன் விளக்கமும் கொடு.",
+      "Mains Answer": "UPSC Mains-க்கான ஒரு மாதிரி கேள்வி கொடு, அதற்கு 150 வார்த்தை மாதிரி பதிலும் எழுது.",
+      "Current Affairs": "UPSC-க்கு முக்கியமான சமீபத்திய நடப்பு நிகழ்வுகள் 5 சொல்லு.",
+      "Notes Summary": "நான் ஒட்டும் குறிப்புகளை சுருக்கமாக்கு. தயாரா?"
+    };
+    askAI(prompts[t]);
+  }
+
+  // ---------- App-ஆ நிறுவ service worker ----------
+  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
+</script>
+</body>
+</html>
